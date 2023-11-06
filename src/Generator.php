@@ -37,7 +37,7 @@ class Generator
         $this->addCreditorData($paymentInformation, $directDebit);
 
         foreach ($paymentInformation->transfers as $transfer) {
-            $this->addTransfer($directDebit, $transfer);
+            $this->addTransfer($paymentInformation, $directDebit, $transfer);
         }
 
         return $directDebit;
@@ -57,7 +57,7 @@ class Generator
         CustomerDirectDebitFacade $directDebit,
     ): void {
         $directDebit->addPaymentInfo($paymentInformation->id, [
-            'id' => sprintf('%s-%s', $paymentInformation->id, $paymentInformation->sequenceType),
+            'id' => $this->paymentId($paymentInformation),
             'dueDate' => $this->requestedCollectionDate($paymentInformation)->format('Y-m-d'),
             'creditorId' => $paymentInformation->creditorId,
             'creditorName' => $paymentInformation->creditorName,
@@ -67,20 +67,24 @@ class Generator
     }
 
     private function addTransfer(
+        PaymentInformation $paymentInformation,
         CustomerDirectDebitFacade $directDebit,
         DirectDebitTransactionInformation $directDebitTransaction,
     ): void {
-        $reference = $directDebitTransaction->paymentId;
-
-        $directDebit->addTransfer($reference, [
-            'endToEndId' => $reference,
+        $directDebit->addTransfer($this->paymentId($paymentInformation), [
+            'endToEndId' => $directDebitTransaction->endToEndId,
             'amount' => $directDebitTransaction->instructedAmount->getMinorAmount()->toInt(),
             'debtorIban' => $directDebitTransaction->iban,
             'debtorName' => iconv('UTF-8', 'US-ASCII//TRANSLIT', $directDebitTransaction->name),
-            'debtorMandate' => $reference,
-            'debtorMandateSignDate' => date('Y-m-d'),
+            'debtorMandate' => $directDebitTransaction->mandateId,
+            'debtorMandateSignDate' => $directDebitTransaction->mandateDate,
             'remittanceInformation' => iconv('UTF-8', 'US-ASCII//TRANSLIT', $directDebitTransaction->remittanceInformation),
         ]);
+    }
+
+    private function paymentId(PaymentInformation $paymentInformation): string
+    {
+        return sprintf('%s-%s', $paymentInformation->id, $paymentInformation->sequenceType);
     }
 
     private function requestedCollectionDate(PaymentInformation $paymentInformation): DateTimeImmutable

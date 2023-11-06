@@ -56,10 +56,6 @@ class PaymentInformation
 
     public function addTransfer(DirectDebitTransactionInformation $transfer): void
     {
-        if (!isset($transfer->paymentId)) {
-            $transfer->paymentId = $this->id;
-        }
-
         $this->transfers[] = $transfer;
     }
 
