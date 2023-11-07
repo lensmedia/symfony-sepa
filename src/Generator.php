@@ -71,13 +71,13 @@ class Generator
         CustomerDirectDebitFacade $directDebit,
         DirectDebitTransactionInformation $directDebitTransaction,
     ): void {
-        $directDebit->addTransfer($this->paymentId($paymentInformation), [
+        $directDebit->addTransfer($paymentInformation->id, [
             'endToEndId' => $directDebitTransaction->endToEndId,
             'amount' => $directDebitTransaction->instructedAmount->getMinorAmount()->toInt(),
             'debtorIban' => $directDebitTransaction->iban,
             'debtorName' => iconv('UTF-8', 'US-ASCII//TRANSLIT', $directDebitTransaction->name),
             'debtorMandate' => $directDebitTransaction->mandateId,
-            'debtorMandateSignDate' => $directDebitTransaction->mandateDate,
+            'debtorMandateSignDate' => $directDebitTransaction->mandateDate->format('Y-m-d'),
             'remittanceInformation' => iconv('UTF-8', 'US-ASCII//TRANSLIT', $directDebitTransaction->remittanceInformation),
         ]);
     }
